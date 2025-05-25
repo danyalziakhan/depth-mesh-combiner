@@ -16,6 +16,7 @@ import psutil
 import ujson
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider, Button
+import importlib
 
 from cv_ops import (
     compress_left_only,
@@ -581,34 +582,29 @@ def process_from_transform_matrix(
     depth_array3,
     depth_array4,
 ):
-    from transform_matrix_from_diff_depth_array1 import (
-        transform_matrix as transform_matrix1,
-        shape as shape1,
-    )
-    from transform_matrix_from_diff_depth_array2 import (
-        transform_matrix as transform_matrix2,
-        shape as shape2,
-    )
-    from transform_matrix_from_diff_depth_array3 import (
-        transform_matrix as transform_matrix3,
-        shape as shape3,
-    )
-    from transform_matrix_from_diff_depth_array4 import (
-        transform_matrix as transform_matrix4,
-        shape as shape4,
-    )
+    # Dynamically import or reload the modules
+    matrix1 = importlib.import_module("transform_matrix_from_diff_depth_array1")
+    matrix2 = importlib.import_module("transform_matrix_from_diff_depth_array2")
+    matrix3 = importlib.import_module("transform_matrix_from_diff_depth_array3")
+    matrix4 = importlib.import_module("transform_matrix_from_diff_depth_array4")
 
-    depth_array1 = depth_array1 + transform_matrix1
-    depth_array1 = unpad_to_shape(depth_array1, shape1)
+    importlib.reload(matrix1)
+    importlib.reload(matrix2)
+    importlib.reload(matrix3)
+    importlib.reload(matrix4)
 
-    depth_array2 = depth_array2 + transform_matrix2
-    depth_array2 = unpad_to_shape(depth_array2, shape2)
+    # Apply transformations
+    depth_array1 = depth_array1 + matrix1.transform_matrix
+    depth_array1 = unpad_to_shape(depth_array1, matrix1.shape)
 
-    depth_array3 = depth_array3 + transform_matrix3
-    depth_array3 = unpad_to_shape(depth_array3, shape3)
+    depth_array2 = depth_array2 + matrix2.transform_matrix
+    depth_array2 = unpad_to_shape(depth_array2, matrix2.shape)
 
-    depth_array4 = depth_array4 + transform_matrix4
-    depth_array4 = unpad_to_shape(depth_array4, shape4)
+    depth_array3 = depth_array3 + matrix3.transform_matrix
+    depth_array3 = unpad_to_shape(depth_array3, matrix3.shape)
+
+    depth_array4 = depth_array4 + matrix4.transform_matrix
+    depth_array4 = unpad_to_shape(depth_array4, matrix4.shape)
 
     return depth_array1, depth_array2, depth_array3, depth_array4
 

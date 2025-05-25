@@ -7,7 +7,6 @@ import traceback
 
 from matplotlib.pyplot import get_cmap
 from matplotlib.colors import ListedColormap
-from scipy.ndimage import rotate
 
 import numpy as np
 
@@ -21,10 +20,13 @@ from matplotlib.widgets import Slider, Button
 from cv_ops import (
     compress_left_only,
     compress_top_only,
+    crop_depth_arrays_consistent,
+    map_invalid_to_midpoint,
+    rotate_arrays,
     stretch_bottom_only,
     stretch_top_only,
-    crop_depth_array_consistent,
     get_combined_array,
+    clip_values,
 )
 from kinect_data import SensorsConfiguration
 
@@ -57,128 +59,7 @@ def to_infos_file(info_string: str):
         file.write(info_string)
 
 
-def crop_depth_arrays_consistent(
-    depth_array1,
-    depth_array2,
-    depth_array3,
-    depth_array4,
-):
-    depth_array1, depth_array2, depth_array3, depth_array4 = (
-        crop_depth_array_consistent(
-            depth_array1,
-            SENSORS_CONFIGURATION.SENSOR1_TOP,
-            SENSORS_CONFIGURATION.SENSOR1_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR1_LEFT,
-            SENSORS_CONFIGURATION.SENSOR1_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR2_TOP,
-            SENSORS_CONFIGURATION.SENSOR2_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR2_LEFT,
-            SENSORS_CONFIGURATION.SENSOR2_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR3_TOP,
-            SENSORS_CONFIGURATION.SENSOR3_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR3_LEFT,
-            SENSORS_CONFIGURATION.SENSOR3_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR4_TOP,
-            SENSORS_CONFIGURATION.SENSOR4_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR4_LEFT,
-            SENSORS_CONFIGURATION.SENSOR4_RIGHT,
-            0,
-        ),
-        crop_depth_array_consistent(
-            depth_array2,
-            SENSORS_CONFIGURATION.SENSOR1_TOP,
-            SENSORS_CONFIGURATION.SENSOR1_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR1_LEFT,
-            SENSORS_CONFIGURATION.SENSOR1_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR2_TOP,
-            SENSORS_CONFIGURATION.SENSOR2_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR2_LEFT,
-            SENSORS_CONFIGURATION.SENSOR2_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR3_TOP,
-            SENSORS_CONFIGURATION.SENSOR3_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR3_LEFT,
-            SENSORS_CONFIGURATION.SENSOR3_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR4_TOP,
-            SENSORS_CONFIGURATION.SENSOR4_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR4_LEFT,
-            SENSORS_CONFIGURATION.SENSOR4_RIGHT,
-            1,
-        ),
-        crop_depth_array_consistent(
-            depth_array3,
-            SENSORS_CONFIGURATION.SENSOR1_TOP,
-            SENSORS_CONFIGURATION.SENSOR1_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR1_LEFT,
-            SENSORS_CONFIGURATION.SENSOR1_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR2_TOP,
-            SENSORS_CONFIGURATION.SENSOR2_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR2_LEFT,
-            SENSORS_CONFIGURATION.SENSOR2_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR3_TOP,
-            SENSORS_CONFIGURATION.SENSOR3_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR3_LEFT,
-            SENSORS_CONFIGURATION.SENSOR3_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR4_TOP,
-            SENSORS_CONFIGURATION.SENSOR4_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR4_LEFT,
-            SENSORS_CONFIGURATION.SENSOR4_RIGHT,
-            2,
-        ),
-        crop_depth_array_consistent(
-            depth_array4,
-            SENSORS_CONFIGURATION.SENSOR1_TOP,
-            SENSORS_CONFIGURATION.SENSOR1_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR1_LEFT,
-            SENSORS_CONFIGURATION.SENSOR1_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR2_TOP,
-            SENSORS_CONFIGURATION.SENSOR2_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR2_LEFT,
-            SENSORS_CONFIGURATION.SENSOR2_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR3_TOP,
-            SENSORS_CONFIGURATION.SENSOR3_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR3_LEFT,
-            SENSORS_CONFIGURATION.SENSOR3_RIGHT,
-            SENSORS_CONFIGURATION.SENSOR4_TOP,
-            SENSORS_CONFIGURATION.SENSOR4_BOTTOM,
-            SENSORS_CONFIGURATION.SENSOR4_LEFT,
-            SENSORS_CONFIGURATION.SENSOR4_RIGHT,
-            3,
-        ),
-    )
-
-    return depth_array1, depth_array2, depth_array3, depth_array4
-
-
-def rotate_arrays(
-    depth_array1,
-    depth_array2,
-    depth_array3,
-    depth_array4,
-    angle_depth_array1,
-    angle_depth_array2,
-    angle_depth_array3,
-    angle_depth_array4,
-):
-    if angle_depth_array1 != 0:
-        depth_array1 = rotate(
-            depth_array1, angle_depth_array1, reshape=False, order=1, mode="nearest"
-        )
-    if angle_depth_array2 != 0:
-        depth_array2 = rotate(
-            depth_array2, angle_depth_array2, reshape=False, order=1, mode="nearest"
-        )
-    if angle_depth_array3 != 0:
-        depth_array3 = rotate(
-            depth_array3, angle_depth_array3, reshape=False, order=1, mode="nearest"
-        )
-    if angle_depth_array4 != 0:
-        depth_array4 = rotate(
-            depth_array4, angle_depth_array4, reshape=False, order=1, mode="nearest"
-        )
-
-    return depth_array1, depth_array2, depth_array3, depth_array4
-
-
+# Some hardcoded adjustments for heights and tilts
 def adjust_heights(depth_array1, depth_array2, depth_array3, depth_array4):
     # ******************************* SENSOR 1
     depth_array1 = depth_array1 - 25
@@ -303,28 +184,41 @@ def adjust_heights(depth_array1, depth_array2, depth_array3, depth_array4):
     return depth_array1, depth_array2, depth_array3, depth_array4
 
 
-def map_invalid_to_midpoint(midpoint, depth_array):
-    depth_array[depth_array == 0] = midpoint
-
-    return depth_array
-
-
-def clip_values(combined_array, min_depth_value, max_depth_value):
-    return np.clip(combined_array, min_depth_value, max_depth_value)
-
-
-def normalize_values_into_range(combined_array, min_depth_value, max_depth_value):
-    depth_min, depth_max = (
-        np.min(combined_array),
-        np.max(combined_array),
+# Some hardcoded adjustments for margins and heights
+def adjust_margins(depth_array1, depth_array2, depth_array3, depth_array4):
+    depth_array1, depth_array2, depth_array3, depth_array4 = (
+        depth_array1.astype(float),
+        depth_array2.astype(float),
+        depth_array3.astype(float),
+        depth_array4.astype(float),
     )
-    combined_array = (combined_array - depth_min) / (depth_max - depth_min) * (
-        max_depth_value - min_depth_value
-    ) + min_depth_value
 
-    combined_array = combined_array.astype(np.uint16)
+    ##### * 1
+    depth_array1 = compress_top_only(depth_array1, strength=1.50, split_ratio=0.65)
 
-    return combined_array
+    ##### * 2
+    depth_array2 = compress_top_only(depth_array2, strength=1.18, split_ratio=0.55)
+    depth_array2 = compress_left_only(depth_array2, strength=1.20, split_ratio=0.4)
+
+    ##### * 3
+    depth_array3 = stretch_bottom_only(depth_array3, strength=1.28, split_ratio=0.1)
+    depth_array3 = compress_left_only(depth_array3, strength=1.032, split_ratio=0.72)
+    depth_array3 = stretch_top_only(depth_array3, strength=1.26, split_ratio=0.42)
+
+    ##### * 4
+    depth_array4 = stretch_bottom_only(depth_array4, strength=1.13, split_ratio=0.25)
+    depth_array4 = compress_left_only(depth_array4, strength=1.13, split_ratio=0.25)
+    depth_array4 = stretch_top_only(depth_array4, strength=1.80, split_ratio=0.60)
+    depth_array4 = compress_left_only(depth_array4, strength=1.16, split_ratio=0.3)
+
+    depth_array1, depth_array2, depth_array3, depth_array4 = (
+        depth_array1.astype(int),
+        depth_array2.astype(int),
+        depth_array3.astype(int),
+        depth_array4.astype(int),
+    )
+
+    return depth_array1, depth_array2, depth_array3, depth_array4
 
 
 def export_transform_matrix_to_python(matrix, filename, original_shape):
@@ -485,7 +379,7 @@ def show_adjustment_sliders(
     fig_sliders, axs = plt.subplots(
         len(slider_labels), 1, figsize=(12, len(slider_labels) * 0.22)
     )
-    fig_sliders.subplots_adjust(left=0.15, right=0.95, top=0.97, bottom=0.06)
+    fig_sliders.subplots_adjust(left=0.14, right=0.95, top=0.97, bottom=0.06)
     if fig_sliders.canvas.manager is not None:
         fig_sliders.canvas.manager.set_window_title("Controls")
 
@@ -496,7 +390,9 @@ def show_adjustment_sliders(
         slider.on_changed(apply_slider_values)
         sliders.append(slider)
 
-    load_ax = fig_sliders.add_axes((0.030, 0.01, 0.17, 0.04))
+    button_width = 0.18
+
+    load_ax = fig_sliders.add_axes((0.020, 0.01, button_width, 0.04))
     load_button = Button(
         load_ax, "Load Transformation Matrix", color="lightgray", hovercolor="0.8"
     )
@@ -548,7 +444,7 @@ def show_adjustment_sliders(
 
     load_button.on_clicked(load_transformation_matrix_button_clicked)
 
-    load_original_ax = fig_sliders.add_axes((0.27, 0.01, 0.16, 0.04))
+    load_original_ax = fig_sliders.add_axes((0.28, 0.01, button_width, 0.04))
     load_original_button = Button(
         load_original_ax, "Load Original", color="lightgray", hovercolor="0.8"
     )
@@ -583,7 +479,7 @@ def show_adjustment_sliders(
 
     load_original_button.on_clicked(load_original_clicked)
 
-    reset_ax = fig_sliders.add_axes((0.50, 0.01, 0.18, 0.04))
+    reset_ax = fig_sliders.add_axes((0.54, 0.01, button_width, 0.04))
     reset_button = Button(reset_ax, "Reset", color="lightgray", hovercolor="0.8")
 
     def reset_button_clicked(event):
@@ -659,7 +555,7 @@ def show_adjustment_sliders(
             adjusted_depth_array4.shape,
         )
 
-    ax_save = plt.axes((0.74, 0.01, 0.17, 0.04))
+    ax_save = fig_sliders.add_axes((0.80, 0.01, button_width, 0.04))
     btn_save = Button(
         ax_save, "Save Transformation Matrix", color="lightgray", hovercolor="0.8"
     )
@@ -667,42 +563,6 @@ def show_adjustment_sliders(
 
     apply_slider_values()
     plt.show()
-
-
-def adjust_margins(depth_array1, depth_array2, depth_array3, depth_array4):
-    depth_array1, depth_array2, depth_array3, depth_array4 = (
-        depth_array1.astype(float),
-        depth_array2.astype(float),
-        depth_array3.astype(float),
-        depth_array4.astype(float),
-    )
-
-    ##### * 1
-    depth_array1 = compress_top_only(depth_array1, strength=1.50, split_ratio=0.65)
-
-    ##### * 2
-    depth_array2 = compress_top_only(depth_array2, strength=1.18, split_ratio=0.55)
-    depth_array2 = compress_left_only(depth_array2, strength=1.20, split_ratio=0.4)
-
-    ##### * 3
-    depth_array3 = stretch_bottom_only(depth_array3, strength=1.28, split_ratio=0.1)
-    depth_array3 = compress_left_only(depth_array3, strength=1.032, split_ratio=0.72)
-    depth_array3 = stretch_top_only(depth_array3, strength=1.26, split_ratio=0.42)
-
-    ##### * 4
-    depth_array4 = stretch_bottom_only(depth_array4, strength=1.13, split_ratio=0.25)
-    depth_array4 = compress_left_only(depth_array4, strength=1.13, split_ratio=0.25)
-    depth_array4 = stretch_top_only(depth_array4, strength=1.80, split_ratio=0.60)
-    depth_array4 = compress_left_only(depth_array4, strength=1.16, split_ratio=0.3)
-
-    depth_array1, depth_array2, depth_array3, depth_array4 = (
-        depth_array1.astype(int),
-        depth_array2.astype(int),
-        depth_array3.astype(int),
-        depth_array4.astype(int),
-    )
-
-    return depth_array1, depth_array2, depth_array3, depth_array4
 
 
 def pad_to_shape(array, target_shape):
@@ -777,6 +637,7 @@ def process_depth_array(
             depth_array2,
             depth_array3,
             depth_array4,
+            SENSORS_CONFIGURATION,
         )
     )
 

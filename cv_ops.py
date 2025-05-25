@@ -3,6 +3,8 @@ import cv2
 
 import numpy as np
 
+from scipy.ndimage import rotate
+
 
 def stretch_top_only(depth_array, strength=2.0, split_ratio=0.5):
     """
@@ -370,3 +372,150 @@ def get_combined_array(depth_arrays: list[np.ndarray]):
         bottom_row = np.pad(bottom_row, ((0, 0), (0, diff_shape)), mode="constant")
 
     return np.concatenate((top_row, bottom_row), axis=0)
+
+
+def crop_depth_arrays_consistent(
+    depth_array1,
+    depth_array2,
+    depth_array3,
+    depth_array4,
+    SENSORS_CONFIGURATION,
+):
+    depth_array1, depth_array2, depth_array3, depth_array4 = (
+        crop_depth_array_consistent(
+            depth_array1,
+            SENSORS_CONFIGURATION.SENSOR1_TOP,
+            SENSORS_CONFIGURATION.SENSOR1_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR1_LEFT,
+            SENSORS_CONFIGURATION.SENSOR1_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR2_TOP,
+            SENSORS_CONFIGURATION.SENSOR2_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR2_LEFT,
+            SENSORS_CONFIGURATION.SENSOR2_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR3_TOP,
+            SENSORS_CONFIGURATION.SENSOR3_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR3_LEFT,
+            SENSORS_CONFIGURATION.SENSOR3_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR4_TOP,
+            SENSORS_CONFIGURATION.SENSOR4_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR4_LEFT,
+            SENSORS_CONFIGURATION.SENSOR4_RIGHT,
+            0,
+        ),
+        crop_depth_array_consistent(
+            depth_array2,
+            SENSORS_CONFIGURATION.SENSOR1_TOP,
+            SENSORS_CONFIGURATION.SENSOR1_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR1_LEFT,
+            SENSORS_CONFIGURATION.SENSOR1_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR2_TOP,
+            SENSORS_CONFIGURATION.SENSOR2_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR2_LEFT,
+            SENSORS_CONFIGURATION.SENSOR2_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR3_TOP,
+            SENSORS_CONFIGURATION.SENSOR3_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR3_LEFT,
+            SENSORS_CONFIGURATION.SENSOR3_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR4_TOP,
+            SENSORS_CONFIGURATION.SENSOR4_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR4_LEFT,
+            SENSORS_CONFIGURATION.SENSOR4_RIGHT,
+            1,
+        ),
+        crop_depth_array_consistent(
+            depth_array3,
+            SENSORS_CONFIGURATION.SENSOR1_TOP,
+            SENSORS_CONFIGURATION.SENSOR1_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR1_LEFT,
+            SENSORS_CONFIGURATION.SENSOR1_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR2_TOP,
+            SENSORS_CONFIGURATION.SENSOR2_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR2_LEFT,
+            SENSORS_CONFIGURATION.SENSOR2_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR3_TOP,
+            SENSORS_CONFIGURATION.SENSOR3_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR3_LEFT,
+            SENSORS_CONFIGURATION.SENSOR3_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR4_TOP,
+            SENSORS_CONFIGURATION.SENSOR4_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR4_LEFT,
+            SENSORS_CONFIGURATION.SENSOR4_RIGHT,
+            2,
+        ),
+        crop_depth_array_consistent(
+            depth_array4,
+            SENSORS_CONFIGURATION.SENSOR1_TOP,
+            SENSORS_CONFIGURATION.SENSOR1_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR1_LEFT,
+            SENSORS_CONFIGURATION.SENSOR1_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR2_TOP,
+            SENSORS_CONFIGURATION.SENSOR2_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR2_LEFT,
+            SENSORS_CONFIGURATION.SENSOR2_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR3_TOP,
+            SENSORS_CONFIGURATION.SENSOR3_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR3_LEFT,
+            SENSORS_CONFIGURATION.SENSOR3_RIGHT,
+            SENSORS_CONFIGURATION.SENSOR4_TOP,
+            SENSORS_CONFIGURATION.SENSOR4_BOTTOM,
+            SENSORS_CONFIGURATION.SENSOR4_LEFT,
+            SENSORS_CONFIGURATION.SENSOR4_RIGHT,
+            3,
+        ),
+    )
+
+    return depth_array1, depth_array2, depth_array3, depth_array4
+
+
+def rotate_arrays(
+    depth_array1,
+    depth_array2,
+    depth_array3,
+    depth_array4,
+    angle_depth_array1,
+    angle_depth_array2,
+    angle_depth_array3,
+    angle_depth_array4,
+):
+    if angle_depth_array1 != 0:
+        depth_array1 = rotate(
+            depth_array1, angle_depth_array1, reshape=False, order=1, mode="nearest"
+        )
+    if angle_depth_array2 != 0:
+        depth_array2 = rotate(
+            depth_array2, angle_depth_array2, reshape=False, order=1, mode="nearest"
+        )
+    if angle_depth_array3 != 0:
+        depth_array3 = rotate(
+            depth_array3, angle_depth_array3, reshape=False, order=1, mode="nearest"
+        )
+    if angle_depth_array4 != 0:
+        depth_array4 = rotate(
+            depth_array4, angle_depth_array4, reshape=False, order=1, mode="nearest"
+        )
+
+    return depth_array1, depth_array2, depth_array3, depth_array4
+
+
+def map_invalid_to_midpoint(midpoint, depth_array):
+    depth_array[depth_array == 0] = midpoint
+
+    return depth_array
+
+
+def clip_values(combined_array, min_depth_value, max_depth_value):
+    return np.clip(combined_array, min_depth_value, max_depth_value)
+
+
+def normalize_values_into_range(combined_array, min_depth_value, max_depth_value):
+    depth_min, depth_max = (
+        np.min(combined_array),
+        np.max(combined_array),
+    )
+    combined_array = (combined_array - depth_min) / (depth_max - depth_min) * (
+        max_depth_value - min_depth_value
+    ) + min_depth_value
+
+    combined_array = combined_array.astype(np.uint16)
+
+    return combined_array

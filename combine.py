@@ -19,15 +19,15 @@ from matplotlib.widgets import Slider, Button
 import importlib
 
 from cv_ops import (
-    compress_left_only,
-    compress_top_only,
+    shrink_left_only,
+    shrink_top_only,
     crop_depth_arrays_consistent,
     map_invalid_to_midpoint,
     rotate_arrays,
-    stretch_bottom_only,
     stretch_top_only,
     get_combined_array,
     clip_values,
+    shrink_bottom_only,
 )
 from kinect_data import SensorsConfiguration
 
@@ -52,7 +52,7 @@ PROCESS = psutil.Process(os.getpid())
 
 FRAME_NO = 1
 
-depth_arrays_without_cropping = []
+depth_arrays_without_transformation = []
 
 
 def to_infos_file(info_string: str):
@@ -195,22 +195,19 @@ def adjust_margins(depth_array1, depth_array2, depth_array3, depth_array4):
     )
 
     ##### * 1
-    depth_array1 = compress_top_only(depth_array1, strength=1.50, split_ratio=0.65)
+    depth_array1 = shrink_top_only(depth_array1, strength=1.50, split_ratio=0.65)
 
     ##### * 2
-    depth_array2 = compress_top_only(depth_array2, strength=1.18, split_ratio=0.55)
-    depth_array2 = compress_left_only(depth_array2, strength=1.20, split_ratio=0.4)
+    depth_array2 = shrink_top_only(depth_array2, strength=1.18, split_ratio=0.55)
 
     ##### * 3
-    depth_array3 = stretch_bottom_only(depth_array3, strength=1.28, split_ratio=0.1)
-    depth_array3 = compress_left_only(depth_array3, strength=1.032, split_ratio=0.72)
-    depth_array3 = stretch_top_only(depth_array3, strength=1.26, split_ratio=0.42)
+    depth_array3 = shrink_bottom_only(depth_array3, strength=1.32, split_ratio=0.4)
 
     ##### * 4
-    depth_array4 = stretch_bottom_only(depth_array4, strength=1.13, split_ratio=0.25)
-    depth_array4 = compress_left_only(depth_array4, strength=1.13, split_ratio=0.25)
+    depth_array4 = shrink_bottom_only(depth_array4, strength=1.13, split_ratio=0.25)
+    depth_array4 = shrink_left_only(depth_array4, strength=1.13, split_ratio=0.25)
     depth_array4 = stretch_top_only(depth_array4, strength=1.80, split_ratio=0.60)
-    depth_array4 = compress_left_only(depth_array4, strength=1.16, split_ratio=0.3)
+    depth_array4 = shrink_left_only(depth_array4, strength=1.16, split_ratio=0.3)
 
     depth_array1, depth_array2, depth_array3, depth_array4 = (
         depth_array1.astype(int),
@@ -235,10 +232,10 @@ def export_transform_matrix_to_python(matrix, filename, original_shape):
 
 
 def show_adjustment_sliders(
-    depth_arrays_without_cropping,
+    depth_arrays_without_transformation,
     SENSORS_CONFIGURATION,
 ):
-    current_arrays = [arr.copy() for arr in depth_arrays_without_cropping[-1]]
+    current_arrays = [arr.copy() for arr in depth_arrays_without_transformation]
 
     plt.rcParams["toolbar"] = "none"  # <- Disables toolbar
     fig_plot, ax_plot = plt.subplots(figsize=(16, 9))
@@ -260,7 +257,7 @@ def show_adjustment_sliders(
     ax_plot.set_aspect("auto")  # allow image to stretch
 
     current_arrays[0], current_arrays[1], current_arrays[2], current_arrays[3] = (
-        process_depth_array(
+        apply_transformations_to_depth_arrays(
             current_arrays[0],
             current_arrays[1],
             current_arrays[2],
@@ -340,11 +337,11 @@ def show_adjustment_sliders(
             current_arrays[1],
             current_arrays[2],
             current_arrays[3],
-        ) = process_depth_array(
-            depth_arrays_without_cropping[-1][0],
-            depth_arrays_without_cropping[-1][1],
-            depth_arrays_without_cropping[-1][2],
-            depth_arrays_without_cropping[-1][3],
+        ) = apply_transformations_to_depth_arrays(
+            depth_arrays_without_transformation[0],
+            depth_arrays_without_transformation[1],
+            depth_arrays_without_transformation[2],
+            depth_arrays_without_transformation[3],
             SENSORS_CONFIGURATION,
         )
 
@@ -406,10 +403,10 @@ def show_adjustment_sliders(
             current_arrays[2],
             current_arrays[3],
         ) = (
-            depth_arrays_without_cropping[-1][0],
-            depth_arrays_without_cropping[-1][1],
-            depth_arrays_without_cropping[-1][2],
-            depth_arrays_without_cropping[-1][3],
+            depth_arrays_without_transformation[0],
+            depth_arrays_without_transformation[1],
+            depth_arrays_without_transformation[2],
+            depth_arrays_without_transformation[3],
         )
 
         (
@@ -458,10 +455,10 @@ def show_adjustment_sliders(
             current_arrays[2],
             current_arrays[3],
         ) = (
-            depth_arrays_without_cropping[-1][0],
-            depth_arrays_without_cropping[-1][1],
-            depth_arrays_without_cropping[-1][2],
-            depth_arrays_without_cropping[-1][3],
+            depth_arrays_without_transformation[0],
+            depth_arrays_without_transformation[1],
+            depth_arrays_without_transformation[2],
+            depth_arrays_without_transformation[3],
         )
 
         combined = get_combined_array(current_arrays)
@@ -500,60 +497,80 @@ def show_adjustment_sliders(
                 if idx in [3, 7, 11, 15, 19]:
                     f.write("\n")
 
+        # ***************************************
         adjusted_depth_array1 = current_arrays[0]
+        original_depth_array1 = depth_arrays_without_transformation[0]
+
         transform_matrix = pad_to_shape(
             adjusted_depth_array1,
             (
-                depth_arrays_without_cropping[-1][0].shape[0],
-                depth_arrays_without_cropping[-1][0].shape[1],
+                original_depth_array1.shape[0],
+                original_depth_array1.shape[1],
             ),
-        ).astype(np.int32) - depth_arrays_without_cropping[-1][0].astype(np.int32)
-        transform_matrix = transform_matrix.astype(np.int16)  # Optional: limit range
+        ).astype(np.int32) - original_depth_array1.astype(np.int32)
+
+        transform_matrix = transform_matrix.astype(np.int16)
+
         export_transform_matrix_to_python(
             transform_matrix,
             "transform_matrix_from_diff_depth_array1.py",
             adjusted_depth_array1.shape,
         )
 
+        # ***************************************
         adjusted_depth_array2 = current_arrays[1]
+        original_depth_array2 = depth_arrays_without_transformation[1]
+
         transform_matrix = pad_to_shape(
             adjusted_depth_array2,
             (
-                depth_arrays_without_cropping[-1][1].shape[0],
-                depth_arrays_without_cropping[-1][1].shape[1],
+                original_depth_array2.shape[0],
+                original_depth_array2.shape[1],
             ),
-        ).astype(np.int32) - depth_arrays_without_cropping[-1][1].astype(np.int32)
-        transform_matrix = transform_matrix.astype(np.int16)  # Optional: limit range
+        ).astype(np.int32) - original_depth_array2.astype(np.int32)
+
+        transform_matrix = transform_matrix.astype(np.int16)
+
         export_transform_matrix_to_python(
             transform_matrix,
             "transform_matrix_from_diff_depth_array2.py",
             adjusted_depth_array2.shape,
         )
 
+        # ***************************************
         adjusted_depth_array3 = current_arrays[2]
+        original_depth_array3 = depth_arrays_without_transformation[2]
+
         transform_matrix = pad_to_shape(
             adjusted_depth_array3,
             (
-                depth_arrays_without_cropping[-1][2].shape[0],
-                depth_arrays_without_cropping[-1][2].shape[1],
+                original_depth_array3.shape[0],
+                original_depth_array3.shape[1],
             ),
-        ).astype(np.int32) - depth_arrays_without_cropping[-1][2].astype(np.int32)
-        transform_matrix = transform_matrix.astype(np.int16)  # Optional: limit range
+        ).astype(np.int32) - original_depth_array3.astype(np.int32)
+
+        transform_matrix = transform_matrix.astype(np.int16)
+
         export_transform_matrix_to_python(
             transform_matrix,
             "transform_matrix_from_diff_depth_array3.py",
             adjusted_depth_array3.shape,
         )
 
+        # ***************************************
         adjusted_depth_array4 = current_arrays[3]
+        original_depth_array4 = depth_arrays_without_transformation[3]
+
         transform_matrix = pad_to_shape(
             adjusted_depth_array4,
             (
-                depth_arrays_without_cropping[-1][3].shape[0],
-                depth_arrays_without_cropping[-1][3].shape[1],
+                original_depth_array4.shape[0],
+                original_depth_array4.shape[1],
             ),
-        ).astype(np.int32) - depth_arrays_without_cropping[-1][3].astype(np.int32)
-        transform_matrix = transform_matrix.astype(np.int16)  # Optional: limit range
+        ).astype(np.int32) - original_depth_array4.astype(np.int32)
+
+        transform_matrix = transform_matrix.astype(np.int16)
+
         export_transform_matrix_to_python(
             transform_matrix,
             "transform_matrix_from_diff_depth_array4.py",
@@ -613,7 +630,7 @@ def process_from_transform_matrix(
     return depth_array1, depth_array2, depth_array3, depth_array4
 
 
-def process_depth_array(
+def apply_transformations_to_depth_arrays(
     depth_array1,
     depth_array2,
     depth_array3,
@@ -738,16 +755,21 @@ if __name__ == "__main__":
         file_data_list = ujson.loads(file_data)
         depth_array4 = np.array(file_data_list)
 
-        depth_arrays_without_cropping.append(
-            [depth_array1, depth_array2, depth_array3, depth_array4]
-        )
-
-        depth_array1, depth_array2, depth_array3, depth_array4 = process_depth_array(
+        depth_arrays_without_transformation = [
             depth_array1,
             depth_array2,
             depth_array3,
             depth_array4,
-            SENSORS_CONFIGURATION,
+        ]
+
+        depth_array1, depth_array2, depth_array3, depth_array4 = (
+            apply_transformations_to_depth_arrays(
+                depth_array1,
+                depth_array2,
+                depth_array3,
+                depth_array4,
+                SENSORS_CONFIGURATION,
+            )
         )
 
         depth_arrays = [depth_array1, depth_array2, depth_array3, depth_array4]
@@ -785,6 +807,6 @@ if __name__ == "__main__":
 
     finally:
         show_adjustment_sliders(
-            depth_arrays_without_cropping,
+            depth_arrays_without_transformation,
             SENSORS_CONFIGURATION,
         )

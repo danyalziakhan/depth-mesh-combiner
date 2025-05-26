@@ -15,10 +15,10 @@ class SensorsConfiguration:
     SENSOR2_LEFT: int = 121
     SENSOR2_RIGHT: int = 489
 
-    SENSOR3_TOP: int = 165
-    SENSOR3_BOTTOM: int = 362
-    SENSOR3_LEFT: int = 24
-    SENSOR3_RIGHT: int = 407
+    SENSOR3_TOP: int = 186
+    SENSOR3_BOTTOM: int = 383
+    SENSOR3_LEFT: int = 23
+    SENSOR3_RIGHT: int = 406
 
     SENSOR4_TOP: int = 124
     SENSOR4_BOTTOM: int = 326

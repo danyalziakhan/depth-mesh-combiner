@@ -392,8 +392,9 @@ def show_adjustment_sliders(
         sliders.append(slider)
 
     button_width = 0.18
+    button_height = 0.04
 
-    load_ax = fig_sliders.add_axes((0.020, 0.01, button_width, 0.04))
+    load_ax = fig_sliders.add_axes((0.020, 0.01, button_width, button_height))
     load_button = Button(
         load_ax, "Load Transformation Matrix", color="lightgray", hovercolor="0.8"
     )
@@ -445,7 +446,7 @@ def show_adjustment_sliders(
 
     load_button.on_clicked(load_transformation_matrix_button_clicked)
 
-    load_original_ax = fig_sliders.add_axes((0.28, 0.01, button_width, 0.04))
+    load_original_ax = fig_sliders.add_axes((0.28, 0.01, button_width, button_height))
     load_original_button = Button(
         load_original_ax, "Load Original", color="lightgray", hovercolor="0.8"
     )
@@ -480,7 +481,7 @@ def show_adjustment_sliders(
 
     load_original_button.on_clicked(load_original_clicked)
 
-    reset_ax = fig_sliders.add_axes((0.54, 0.01, button_width, 0.04))
+    reset_ax = fig_sliders.add_axes((0.54, 0.01, button_width, button_height))
     reset_button = Button(reset_ax, "Reset", color="lightgray", hovercolor="0.8")
 
     def reset_button_clicked(event):
@@ -493,8 +494,11 @@ def show_adjustment_sliders(
 
     def save_slider_values(event):
         with open("slider_values.txt", "w") as f:
-            for label, slider_value in zip(slider_labels, sliders):
-                f.write(f"{label[0]} = {slider_value.val},\n")
+            for idx, (label, slider_value) in enumerate(zip(slider_labels, sliders)):
+                f.write(f"{label[0]}: int = {slider_value.val}\n")
+
+                if idx in [3, 7, 11, 15, 19]:
+                    f.write("\n")
 
         adjusted_depth_array1 = current_arrays[0]
         transform_matrix = pad_to_shape(
@@ -556,7 +560,7 @@ def show_adjustment_sliders(
             adjusted_depth_array4.shape,
         )
 
-    ax_save = fig_sliders.add_axes((0.80, 0.01, button_width, 0.04))
+    ax_save = fig_sliders.add_axes((0.80, 0.01, button_width, button_height))
     btn_save = Button(
         ax_save, "Save Transformation Matrix", color="lightgray", hovercolor="0.8"
     )
@@ -663,9 +667,6 @@ if __name__ == "__main__":
 
         last_time = time.perf_counter()
 
-        ## * Empty the list every loop
-        depth_arrays = []
-
         if MOCK_DATA_SENSOR_COUNT != 4:
             raise ValueError("Only 4 sensors data are supported.")
 
@@ -749,11 +750,7 @@ if __name__ == "__main__":
             SENSORS_CONFIGURATION,
         )
 
-        depth_arrays.append(depth_array1)
-        depth_arrays.append(depth_array2)
-        depth_arrays.append(depth_array3)
-        depth_arrays.append(depth_array4)
-
+        depth_arrays = [depth_array1, depth_array2, depth_array3, depth_array4]
         combined_array = get_combined_array(depth_arrays)
 
         combined_array = map_invalid_to_midpoint(

@@ -1,4 +1,6 @@
 from __future__ import annotations
+
+import importlib
 import cv2
 
 import numpy as np
@@ -712,3 +714,46 @@ def normalize_values_into_range(depth_array, min_depth_value, max_depth_value):
     ) + min_depth_value
 
     return depth_array.astype(np.uint16)
+
+
+def pad_to_shape(array, target_shape):
+    padded = np.zeros(target_shape, dtype=array.dtype)
+    padded[: array.shape[0], : array.shape[1]] = array
+    return padded
+
+
+def unpad_to_shape(array, target_shape):
+    return array[: target_shape[0], : target_shape[1]]
+
+
+def process_from_transform_matrix(
+    depth_array1,
+    depth_array2,
+    depth_array3,
+    depth_array4,
+):
+    # Dynamically import or reload the modules
+    matrix1 = importlib.import_module("transform_matrix_from_diff_depth_array1")
+    matrix2 = importlib.import_module("transform_matrix_from_diff_depth_array2")
+    matrix3 = importlib.import_module("transform_matrix_from_diff_depth_array3")
+    matrix4 = importlib.import_module("transform_matrix_from_diff_depth_array4")
+
+    importlib.reload(matrix1)
+    importlib.reload(matrix2)
+    importlib.reload(matrix3)
+    importlib.reload(matrix4)
+
+    # Apply transformations
+    depth_array1 = depth_array1 + matrix1.transform_matrix
+    depth_array1 = unpad_to_shape(depth_array1, matrix1.shape)
+
+    depth_array2 = depth_array2 + matrix2.transform_matrix
+    depth_array2 = unpad_to_shape(depth_array2, matrix2.shape)
+
+    depth_array3 = depth_array3 + matrix3.transform_matrix
+    depth_array3 = unpad_to_shape(depth_array3, matrix3.shape)
+
+    depth_array4 = depth_array4 + matrix4.transform_matrix
+    depth_array4 = unpad_to_shape(depth_array4, matrix4.shape)
+
+    return depth_array1, depth_array2, depth_array3, depth_array4

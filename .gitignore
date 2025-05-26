@@ -144,7 +144,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-transform_matrix_from_diff_*.py
+transform_matrix_*.py
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

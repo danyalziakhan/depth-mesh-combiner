@@ -12,7 +12,7 @@ class SensorsConfiguration:
 
     SENSOR2_TOP: int = 94
     SENSOR2_BOTTOM: int = 328
-    SENSOR2_LEFT: int = 121
+    SENSOR2_LEFT: int = 120
     SENSOR2_RIGHT: int = 489
 
     SENSOR3_TOP: int = 186

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import threading
 
 import traceback
 
@@ -44,7 +43,6 @@ MOCK_DATA_SENSOR_COUNT = 4
 
 SENSORS_CONFIGURATION = SensorsConfiguration()
 
-ALL_INFOS = Path("./all_infos.txt")
 PYTHON_EXCEPTION_ERRORS = Path("./python_exception_errors.txt")
 DEPTH_DATA_DIR = Path("./depth_data")
 
@@ -54,11 +52,6 @@ PROCESS = psutil.Process(os.getpid())
 FRAME_NO = 1
 
 depth_arrays_without_transformation = []
-
-
-def to_infos_file(info_string: str):
-    with open(ALL_INFOS, "a+") as file:
-        file.write(info_string)
 
 
 # Some hardcoded adjustments for heights and tilts
@@ -118,7 +111,7 @@ def adjust_heights(depth_array1, depth_array2, depth_array3, depth_array4):
     depth_array2 = depth_array2 + shift_matrix
 
     # ******************************* SENSOR 3
-    depth_array3 = depth_array3 - 98
+    depth_array3 = depth_array3 - 66
     # *******************************
 
     # * gradient shift
@@ -202,7 +195,8 @@ def adjust_margins(depth_array1, depth_array2, depth_array3, depth_array4):
     depth_array2 = shrink_top_only(depth_array2, strength=1.18, split_ratio=0.55)
 
     ##### * 3
-    depth_array3 = shrink_bottom_only(depth_array3, strength=1.32, split_ratio=0.4)
+    depth_array3 = shrink_bottom_only(depth_array3, strength=1.43, split_ratio=0.38)
+    depth_array3 = stretch_top_only(depth_array3, strength=1.20, split_ratio=0.30)
 
     ##### * 4
     depth_array4 = shrink_bottom_only(depth_array4, strength=1.13, split_ratio=0.25)
@@ -635,11 +629,6 @@ if __name__ == "__main__":
         with open(PYTHON_EXCEPTION_ERRORS, "w") as file:
             file.write("")
 
-        with open(ALL_INFOS, "w") as file:
-            file.write("")
-
-        info_string = new_line = "\n"
-
         last_time = time.perf_counter()
 
         if MOCK_DATA_SENSOR_COUNT != 4:
@@ -720,51 +709,11 @@ if __name__ == "__main__":
             depth_array4,
         ]
 
-        depth_array1, depth_array2, depth_array3, depth_array4 = (
-            apply_transformations_to_depth_arrays(
-                depth_array1,
-                depth_array2,
-                depth_array3,
-                depth_array4,
-                SENSORS_CONFIGURATION,
-            )
-        )
-
-        depth_arrays = [depth_array1, depth_array2, depth_array3, depth_array4]
-        combined_array = get_combined_array(depth_arrays)
-
-        combined_array = map_invalid_to_midpoint(
-            SENSORS_CONFIGURATION.get_midpoint(), combined_array
-        )
-
-        combined_array = clip_values(
-            combined_array,
-            SENSORS_CONFIGURATION.MIN_DEPTH_VALUE,
-            SENSORS_CONFIGURATION.MAX_DEPTH_VALUE,
-        )
-
-        combined_array = combined_array[
-            SENSORS_CONFIGURATION.TOP_MARGIN : -SENSORS_CONFIGURATION.BOTTOM_MARGIN,
-            SENSORS_CONFIGURATION.LEFT_MARGIN : -SENSORS_CONFIGURATION.RIGHT_MARGIN,
-        ]
-
-        time_info = (
-            f"\nTime took per frame: {(time.perf_counter() - last_time):.2f} seconds"
-        )
-        info_string = f"{info_string}{time_info}{new_line}"
-
-        # Send info messages to file
-        thread = threading.Thread(target=to_infos_file, args=(info_string,))
-        thread.start()
-
-        info_string = "\n"
-
-    except Exception:
-        with open(PYTHON_EXCEPTION_ERRORS, "a+") as file:
-            file.write(traceback.format_exc())
-
-    finally:
         show_adjustment_sliders(
             depth_arrays_without_transformation,
             SENSORS_CONFIGURATION,
         )
+
+    except Exception:
+        with open(PYTHON_EXCEPTION_ERRORS, "a+") as file:
+            file.write(traceback.format_exc())

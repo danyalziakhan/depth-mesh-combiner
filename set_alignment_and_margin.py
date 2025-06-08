@@ -29,7 +29,7 @@ from cv_ops import (
     clip_values,
     shrink_bottom_only,
 )
-from kinect_data import SensorsConfiguration
+from sensor_configuration import SensorConfiguration
 
 # ! NOT USED: Dimensions of each frame for Kinect V2.
 FRAME_WIDTH = 512
@@ -41,7 +41,7 @@ MAX_DEPTH = 4500
 
 MOCK_DATA_SENSOR_COUNT = 4
 
-SENSORS_CONFIGURATION = SensorsConfiguration()
+SENSOR_CONFIGURATION = SensorConfiguration()
 
 ERROR_LOG_FILE_PATH = Path("./error_log.txt")
 DEPTH_DATA_DIR = Path("./depth_data")
@@ -228,7 +228,7 @@ def export_transform_matrix_to_python(matrix, filename, original_shape):
 
 def show_adjustment_sliders(
     depth_arrays_without_transformation,
-    SENSORS_CONFIGURATION,
+    SENSOR_CONFIGURATION,
 ):
     current_arrays = [arr.copy() for arr in depth_arrays_without_transformation]
 
@@ -242,7 +242,7 @@ def show_adjustment_sliders(
     if hasattr(manager, "full_screen_toggle"):
         manager.full_screen_toggle()
 
-    manager.set_window_title("Depth Visualization")
+    manager.set_window_title("Kinect V2 Depth Viewer (4-Stream Grid)")
 
     # Remove all axes decorations and have the axes fill the entire figure:
     ax_plot.set_position((0, 0, 1, 1))
@@ -257,25 +257,25 @@ def show_adjustment_sliders(
             current_arrays[1],
             current_arrays[2],
             current_arrays[3],
-            SENSORS_CONFIGURATION,
+            SENSOR_CONFIGURATION,
         )
     )
 
     combined_initial = get_combined_array(current_arrays)
 
     combined_initial = map_invalid_to_midpoint(
-        SENSORS_CONFIGURATION.get_midpoint(), combined_initial
+        SENSOR_CONFIGURATION.get_midpoint(), combined_initial
     )
 
     combined_initial = clip_values(
         combined_initial,
-        SENSORS_CONFIGURATION.MIN_DEPTH_VALUE,
-        SENSORS_CONFIGURATION.MAX_DEPTH_VALUE,
+        SENSOR_CONFIGURATION.MIN_DEPTH_VALUE,
+        SENSOR_CONFIGURATION.MAX_DEPTH_VALUE,
     )
 
     combined_initial = combined_initial[
-        SENSORS_CONFIGURATION.TOP_MARGIN : -SENSORS_CONFIGURATION.BOTTOM_MARGIN,
-        SENSORS_CONFIGURATION.LEFT_MARGIN : -SENSORS_CONFIGURATION.RIGHT_MARGIN,
+        SENSOR_CONFIGURATION.TOP_MARGIN : -SENSOR_CONFIGURATION.BOTTOM_MARGIN,
+        SENSOR_CONFIGURATION.LEFT_MARGIN : -SENSOR_CONFIGURATION.RIGHT_MARGIN,
     ]
 
     # Load inferno and darken it
@@ -295,37 +295,37 @@ def show_adjustment_sliders(
     )
 
     slider_labels = [
-        ("SENSOR1_TOP", SENSORS_CONFIGURATION.SENSOR1_TOP, -424, 424),
-        ("SENSOR1_BOTTOM", SENSORS_CONFIGURATION.SENSOR1_BOTTOM, -424, 424),
-        ("SENSOR1_LEFT", SENSORS_CONFIGURATION.SENSOR1_LEFT, -512, 512),
-        ("SENSOR1_RIGHT", SENSORS_CONFIGURATION.SENSOR1_RIGHT, -512, 512),
-        ("SENSOR2_TOP", SENSORS_CONFIGURATION.SENSOR2_TOP, -424, 424),
-        ("SENSOR2_BOTTOM", SENSORS_CONFIGURATION.SENSOR2_BOTTOM, -424, 424),
-        ("SENSOR2_LEFT", SENSORS_CONFIGURATION.SENSOR2_LEFT, -512, 512),
-        ("SENSOR2_RIGHT", SENSORS_CONFIGURATION.SENSOR2_RIGHT, -512, 512),
-        ("SENSOR3_TOP", SENSORS_CONFIGURATION.SENSOR3_TOP, -424, 424),
-        ("SENSOR3_BOTTOM", SENSORS_CONFIGURATION.SENSOR3_BOTTOM, -424, 424),
-        ("SENSOR3_LEFT", SENSORS_CONFIGURATION.SENSOR3_LEFT, -512, 512),
-        ("SENSOR3_RIGHT", SENSORS_CONFIGURATION.SENSOR3_RIGHT, -512, 512),
-        ("SENSOR4_TOP", SENSORS_CONFIGURATION.SENSOR4_TOP, -424, 424),
-        ("SENSOR4_BOTTOM", SENSORS_CONFIGURATION.SENSOR4_BOTTOM, -424, 424),
-        ("SENSOR4_LEFT", SENSORS_CONFIGURATION.SENSOR4_LEFT, -512, 512),
-        ("SENSOR4_RIGHT", SENSORS_CONFIGURATION.SENSOR4_RIGHT, -512, 512),
-        ("SENSOR1_ANGLE", SENSORS_CONFIGURATION.SENSOR1_ANGLE, -10, 10),
-        ("SENSOR2_ANGLE", SENSORS_CONFIGURATION.SENSOR2_ANGLE, -10, 10),
-        ("SENSOR3_ANGLE", SENSORS_CONFIGURATION.SENSOR3_ANGLE, -10, 10),
-        ("SENSOR4_ANGLE", SENSORS_CONFIGURATION.SENSOR4_ANGLE, -10, 10),
-        ("LEFT_MARGIN", SENSORS_CONFIGURATION.LEFT_MARGIN, 0, 200),
-        ("RIGHT_MARGIN", SENSORS_CONFIGURATION.RIGHT_MARGIN, 0, 200),
-        ("TOP_MARGIN", SENSORS_CONFIGURATION.TOP_MARGIN, 0, 200),
-        ("BOTTOM_MARGIN", SENSORS_CONFIGURATION.BOTTOM_MARGIN, 0, 200),
+        ("SENSOR1_TOP", SENSOR_CONFIGURATION.SENSOR1_TOP, -424, 424),
+        ("SENSOR1_BOTTOM", SENSOR_CONFIGURATION.SENSOR1_BOTTOM, -424, 424),
+        ("SENSOR1_LEFT", SENSOR_CONFIGURATION.SENSOR1_LEFT, -512, 512),
+        ("SENSOR1_RIGHT", SENSOR_CONFIGURATION.SENSOR1_RIGHT, -512, 512),
+        ("SENSOR2_TOP", SENSOR_CONFIGURATION.SENSOR2_TOP, -424, 424),
+        ("SENSOR2_BOTTOM", SENSOR_CONFIGURATION.SENSOR2_BOTTOM, -424, 424),
+        ("SENSOR2_LEFT", SENSOR_CONFIGURATION.SENSOR2_LEFT, -512, 512),
+        ("SENSOR2_RIGHT", SENSOR_CONFIGURATION.SENSOR2_RIGHT, -512, 512),
+        ("SENSOR3_TOP", SENSOR_CONFIGURATION.SENSOR3_TOP, -424, 424),
+        ("SENSOR3_BOTTOM", SENSOR_CONFIGURATION.SENSOR3_BOTTOM, -424, 424),
+        ("SENSOR3_LEFT", SENSOR_CONFIGURATION.SENSOR3_LEFT, -512, 512),
+        ("SENSOR3_RIGHT", SENSOR_CONFIGURATION.SENSOR3_RIGHT, -512, 512),
+        ("SENSOR4_TOP", SENSOR_CONFIGURATION.SENSOR4_TOP, -424, 424),
+        ("SENSOR4_BOTTOM", SENSOR_CONFIGURATION.SENSOR4_BOTTOM, -424, 424),
+        ("SENSOR4_LEFT", SENSOR_CONFIGURATION.SENSOR4_LEFT, -512, 512),
+        ("SENSOR4_RIGHT", SENSOR_CONFIGURATION.SENSOR4_RIGHT, -512, 512),
+        ("SENSOR1_ANGLE", SENSOR_CONFIGURATION.SENSOR1_ANGLE, -10, 10),
+        ("SENSOR2_ANGLE", SENSOR_CONFIGURATION.SENSOR2_ANGLE, -10, 10),
+        ("SENSOR3_ANGLE", SENSOR_CONFIGURATION.SENSOR3_ANGLE, -10, 10),
+        ("SENSOR4_ANGLE", SENSOR_CONFIGURATION.SENSOR4_ANGLE, -10, 10),
+        ("LEFT_MARGIN", SENSOR_CONFIGURATION.LEFT_MARGIN, 0, 200),
+        ("RIGHT_MARGIN", SENSOR_CONFIGURATION.RIGHT_MARGIN, 0, 200),
+        ("TOP_MARGIN", SENSOR_CONFIGURATION.TOP_MARGIN, 0, 200),
+        ("BOTTOM_MARGIN", SENSOR_CONFIGURATION.BOTTOM_MARGIN, 0, 200),
     ]
     default_values = [v for _, v, _, _ in slider_labels]
 
     def apply_slider_values(val=None):
         s = [int(slider.val) for slider in sliders]
 
-        SENSORS_CONFIGURATION[:20] = s[:20]
+        SENSOR_CONFIGURATION[:20] = s[:20]
 
         (
             current_arrays[0],
@@ -337,7 +337,7 @@ def show_adjustment_sliders(
             depth_arrays_without_transformation[1],
             depth_arrays_without_transformation[2],
             depth_arrays_without_transformation[3],
-            SENSORS_CONFIGURATION,
+            SENSOR_CONFIGURATION,
         )
 
         left_margin = int(sliders[20].val)
@@ -352,13 +352,13 @@ def show_adjustment_sliders(
             raise ValueError("Margins are too large for the array size.")
 
         combined = map_invalid_to_midpoint(
-            SENSORS_CONFIGURATION.get_midpoint(), combined
+            SENSOR_CONFIGURATION.get_midpoint(), combined
         )
 
         combined = clip_values(
             combined,
-            SENSORS_CONFIGURATION.MIN_DEPTH_VALUE,
-            SENSORS_CONFIGURATION.MAX_DEPTH_VALUE,
+            SENSOR_CONFIGURATION.MIN_DEPTH_VALUE,
+            SENSOR_CONFIGURATION.MAX_DEPTH_VALUE,
         )
 
         combined = combined[
@@ -374,7 +374,7 @@ def show_adjustment_sliders(
     )
     fig_sliders.subplots_adjust(left=0.14, right=0.95, top=0.97, bottom=0.06)
     if fig_sliders.canvas.manager is not None:
-        fig_sliders.canvas.manager.set_window_title("Controls")
+        fig_sliders.canvas.manager.set_window_title("Sensor Configuration")
 
     sliders = []
     for ax, (label, default_val, min_val, max_val) in zip(axs, slider_labels):
@@ -419,18 +419,18 @@ def show_adjustment_sliders(
         combined = get_combined_array(current_arrays)
 
         combined = map_invalid_to_midpoint(
-            SENSORS_CONFIGURATION.get_midpoint(), combined
+            SENSOR_CONFIGURATION.get_midpoint(), combined
         )
 
         combined = clip_values(
             combined,
-            SENSORS_CONFIGURATION.MIN_DEPTH_VALUE,
-            SENSORS_CONFIGURATION.MAX_DEPTH_VALUE,
+            SENSOR_CONFIGURATION.MIN_DEPTH_VALUE,
+            SENSOR_CONFIGURATION.MAX_DEPTH_VALUE,
         )
 
         combined = combined[
-            SENSORS_CONFIGURATION.TOP_MARGIN : -SENSORS_CONFIGURATION.BOTTOM_MARGIN,
-            SENSORS_CONFIGURATION.LEFT_MARGIN : -SENSORS_CONFIGURATION.RIGHT_MARGIN,
+            SENSOR_CONFIGURATION.TOP_MARGIN : -SENSOR_CONFIGURATION.BOTTOM_MARGIN,
+            SENSOR_CONFIGURATION.LEFT_MARGIN : -SENSOR_CONFIGURATION.RIGHT_MARGIN,
         ]
 
         im.set_data(combined)
@@ -459,13 +459,13 @@ def show_adjustment_sliders(
         combined = get_combined_array(current_arrays)
 
         combined = map_invalid_to_midpoint(
-            SENSORS_CONFIGURATION.get_midpoint(), combined
+            SENSOR_CONFIGURATION.get_midpoint(), combined
         )
 
         combined = clip_values(
             combined,
-            SENSORS_CONFIGURATION.MIN_DEPTH_VALUE,
-            SENSORS_CONFIGURATION.MAX_DEPTH_VALUE,
+            SENSOR_CONFIGURATION.MIN_DEPTH_VALUE,
+            SENSOR_CONFIGURATION.MAX_DEPTH_VALUE,
         )
 
         im.set_data(combined)
@@ -485,12 +485,15 @@ def show_adjustment_sliders(
     reset_button.on_clicked(reset_button_clicked)
 
     def save_slider_values(event):
-        with open("slider_values.txt", "w") as f:
+        filename = "new_sensor_configuration.txt"
+        with open(filename, "w") as f:
             for idx, (label, slider_value) in enumerate(zip(slider_labels, sliders)):
                 f.write(f"{label[0]}: int = {slider_value.val}\n")
 
                 if idx in [3, 7, 11, 15, 19]:
                     f.write("\n")
+
+        print(f"✅ New Sensor Configuration exported to: {filename}")
 
         # ***************************************
         adjusted_depth_array1 = current_arrays[0]
@@ -587,17 +590,17 @@ def apply_transformations_to_depth_arrays(
     depth_array2,
     depth_array3,
     depth_array4,
-    SENSORS_CONFIGURATION,
+    SENSOR_CONFIGURATION,
 ):
     depth_array1, depth_array2, depth_array3, depth_array4 = rotate_arrays(
         depth_array1,
         depth_array2,
         depth_array3,
         depth_array4,
-        SENSORS_CONFIGURATION.SENSOR1_ANGLE,
-        SENSORS_CONFIGURATION.SENSOR2_ANGLE,
-        SENSORS_CONFIGURATION.SENSOR3_ANGLE,
-        SENSORS_CONFIGURATION.SENSOR4_ANGLE,
+        SENSOR_CONFIGURATION.SENSOR1_ANGLE,
+        SENSOR_CONFIGURATION.SENSOR2_ANGLE,
+        SENSOR_CONFIGURATION.SENSOR3_ANGLE,
+        SENSOR_CONFIGURATION.SENSOR4_ANGLE,
     )
 
     depth_array1, depth_array2, depth_array3, depth_array4 = (
@@ -606,7 +609,7 @@ def apply_transformations_to_depth_arrays(
             depth_array2,
             depth_array3,
             depth_array4,
-            SENSORS_CONFIGURATION,
+            SENSOR_CONFIGURATION,
         )
     )
 
@@ -632,7 +635,9 @@ if __name__ == "__main__":
         last_time = time.perf_counter()
 
         if MOCK_DATA_SENSOR_COUNT != 4:
-            raise ValueError("Only 4 sensors data are supported.")
+            raise ValueError(
+                "Only 4 sensors data combination is supported at the moment."
+            )
 
         try:
             with open(
@@ -711,7 +716,7 @@ if __name__ == "__main__":
 
         show_adjustment_sliders(
             depth_arrays_without_transformation,
-            SENSORS_CONFIGURATION,
+            SENSOR_CONFIGURATION,
         )
 
     except Exception:

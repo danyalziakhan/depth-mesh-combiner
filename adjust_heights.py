@@ -12,7 +12,7 @@ from cv_ops import (
     map_invalid_to_midpoint,
     process_from_transform_matrix,
 )
-from kinect_data import SensorsConfiguration
+from sensor_configuration import SensorConfiguration
 
 # Dimensions of each frame for Kinect V2.
 FRAME_WIDTH = 512
@@ -22,7 +22,7 @@ FRAME_HEIGHT = 424
 NEIGHBORHOOD_RADIUS = 3  # 1 = 3x3, 2 = 5x5, 0 = only center pixel
 PIXELS_TO_CHANGE = 30
 
-SENSORS_CONFIGURATION = SensorsConfiguration()
+SENSOR_CONFIGURATION = SensorConfiguration()
 
 DEPTH_DATA_DIR = Path("./depth_data")
 
@@ -206,20 +206,30 @@ if __name__ == "__main__":
         ]
     )
 
-    combined = map_invalid_to_midpoint(SENSORS_CONFIGURATION.get_midpoint(), combined)
+    combined = map_invalid_to_midpoint(SENSOR_CONFIGURATION.get_midpoint(), combined)
 
     combined = clip_values(
         combined,
-        SENSORS_CONFIGURATION.MIN_DEPTH_VALUE,
-        SENSORS_CONFIGURATION.MAX_DEPTH_VALUE,
+        SENSOR_CONFIGURATION.MIN_DEPTH_VALUE,
+        SENSOR_CONFIGURATION.MAX_DEPTH_VALUE,
     )
 
     combined = combined[
-        SENSORS_CONFIGURATION.TOP_MARGIN : -SENSORS_CONFIGURATION.BOTTOM_MARGIN,
-        SENSORS_CONFIGURATION.LEFT_MARGIN : -SENSORS_CONFIGURATION.RIGHT_MARGIN,
+        SENSOR_CONFIGURATION.TOP_MARGIN : -SENSOR_CONFIGURATION.BOTTOM_MARGIN,
+        SENSOR_CONFIGURATION.LEFT_MARGIN : -SENSOR_CONFIGURATION.RIGHT_MARGIN,
     ]
 
-    fig, ax = plt.subplots(figsize=(16, 8))
+    fig, ax = plt.subplots(figsize=(16, 9))
+
+    manager = plt.get_current_fig_manager()
+    if not manager:
+        raise ValueError("Figure manager is not available.")
+
+    if hasattr(manager, "full_screen_toggle"):
+        manager.full_screen_toggle()
+
+    manager.set_window_title("Kinect V2 Depth Viewer (4-Stream Grid)")
+
     im = ax.imshow(combined, cmap="viridis")
     plt.colorbar(im)
     im.format_cursor_data = (

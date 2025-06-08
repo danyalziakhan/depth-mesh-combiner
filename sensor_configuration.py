@@ -4,7 +4,7 @@ from dataclasses import dataclass, fields
 
 
 @dataclass
-class SensorsConfiguration:
+class SensorConfiguration:
     SENSOR1_TOP: int = 75
     SENSOR1_BOTTOM: int = 292
     SENSOR1_LEFT: int = 30

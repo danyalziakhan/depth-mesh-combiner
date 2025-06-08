@@ -43,7 +43,7 @@ MOCK_DATA_SENSOR_COUNT = 4
 
 SENSORS_CONFIGURATION = SensorsConfiguration()
 
-PYTHON_EXCEPTION_ERRORS = Path("./python_exception_errors.txt")
+ERROR_LOG_FILE_PATH = Path("./error_log.txt")
 DEPTH_DATA_DIR = Path("./depth_data")
 
 # Get the current process for monitoring resource usage
@@ -626,7 +626,7 @@ def apply_transformations_to_depth_arrays(
 
 if __name__ == "__main__":
     try:
-        with open(PYTHON_EXCEPTION_ERRORS, "w") as file:
+        with open(ERROR_LOG_FILE_PATH, "w") as file:
             file.write("")
 
         last_time = time.perf_counter()
@@ -715,5 +715,5 @@ if __name__ == "__main__":
         )
 
     except Exception:
-        with open(PYTHON_EXCEPTION_ERRORS, "a+") as file:
+        with open(ERROR_LOG_FILE_PATH, "a+") as file:
             file.write(traceback.format_exc())

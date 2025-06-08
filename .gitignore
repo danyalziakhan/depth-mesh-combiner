@@ -2,6 +2,7 @@ vcpkg/
 *.txt
 .vscode
 depth_data/
+!requirements.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

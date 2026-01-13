@@ -8,7 +8,9 @@ import numpy as np
 from scipy.ndimage import rotate
 
 
-def stretch_top_only(depth_array, strength=2.0, split_ratio=0.5):
+def stretch_top_only(
+    depth_array: np.ndarray, strength: float = 2.0, split_ratio: float = 0.5
+):
     """
     Vertically stretches (pulls outward) the top portion of a 2D image or depth map,
     while keeping the bottom portion unchanged.
@@ -51,7 +53,9 @@ def stretch_top_only(depth_array, strength=2.0, split_ratio=0.5):
     )
 
 
-def shrink_bottom_only(depth_array, strength=2.0, split_ratio=0.5):
+def shrink_bottom_only(
+    depth_array: np.ndarray, strength: float = 2.0, split_ratio: float = 0.5
+):
     """
     Vertically stretches (pulls outward) the bottom portion of a 2D image or depth map,
     while keeping the top portion unchanged.
@@ -95,7 +99,9 @@ def shrink_bottom_only(depth_array, strength=2.0, split_ratio=0.5):
     )
 
 
-def stretch_left_only(depth_array, strength=2.0, split_ratio=0.5):
+def stretch_left_only(
+    depth_array: np.ndarray, strength: float = 2.0, split_ratio: float = 0.5
+):
     """
     Horizontally stretches (pulls outward) the left portion of a 2D image or depth map,
     while keeping the right portion unchanged.
@@ -139,7 +145,9 @@ def stretch_left_only(depth_array, strength=2.0, split_ratio=0.5):
     )
 
 
-def stretch_right_only(depth_array, strength=2.0, split_ratio=0.5):
+def stretch_right_only(
+    depth_array: np.ndarray, strength: float = 2.0, split_ratio: float = 0.5
+):
     """
     Stretches the right portion of the image *outward* (to the right),
     keeping the left portion intact.
@@ -176,7 +184,9 @@ def stretch_right_only(depth_array, strength=2.0, split_ratio=0.5):
     )
 
 
-def shrink_top_only(depth_array, strength=2.0, split_ratio=0.5):
+def shrink_top_only(
+    depth_array: np.ndarray, strength: float = 2.0, split_ratio: float = 0.5
+):
     """
     Vertically compresses (shrinks) the top portion of a 2D image or depth map inward,
     toward the center, while keeping the bottom portion unchanged.
@@ -227,7 +237,9 @@ def shrink_top_only(depth_array, strength=2.0, split_ratio=0.5):
     )
 
 
-def stretch_bottom_only(depth_array, strength=2.0, split_ratio=0.5):
+def stretch_bottom_only(
+    depth_array: np.ndarray, strength: float = 2.0, split_ratio: float = 0.5
+):
     """
     Compresses the bottom portion of the image inward (toward the center), keeping the top intact.
 
@@ -260,7 +272,9 @@ def stretch_bottom_only(depth_array, strength=2.0, split_ratio=0.5):
     )
 
 
-def shrink_left_only(depth_array, strength=2.0, split_ratio=0.5):
+def shrink_left_only(
+    depth_array: np.ndarray, strength: float = 2.0, split_ratio: float = 0.5
+):
     """
     Horizontally compresses (shrinks) the left portion of a 2D image or depth map inward,
     toward the center, while keeping the right portion unchanged.
@@ -310,7 +324,9 @@ def shrink_left_only(depth_array, strength=2.0, split_ratio=0.5):
     )
 
 
-def shrink_right_only(depth_array, strength=2.0, split_ratio=0.5):
+def shrink_right_only(
+    depth_array: np.ndarray, strength: float = 2.0, split_ratio: float = 0.5
+):
     """
     Horizontally compresses (shrinks) the right portion of a 2D image or depth map toward the center,
     while keeping the left portion unchanged.
@@ -361,7 +377,7 @@ def shrink_right_only(depth_array, strength=2.0, split_ratio=0.5):
 
 
 def crop_depth_array_consistent(
-    depth_array: np.array,  # type: ignore
+    depth_array: np.ndarray,
     depth_array1_top: int,
     depth_array1_bottom: int,
     depth_array1_left: int,
@@ -506,11 +522,26 @@ def get_combined_array(depth_arrays: list[np.ndarray]):
 
 
 def crop_depth_arrays_consistent(
-    depth_array1,
-    depth_array2,
-    depth_array3,
-    depth_array4,
-    SENSOR_CONFIGURATION,
+    depth_array1: np.ndarray,
+    depth_array2: np.ndarray,
+    depth_array3: np.ndarray,
+    depth_array4: np.ndarray,
+    depth_array1_top: int,
+    depth_array1_bottom: int,
+    depth_array1_left: int,
+    depth_array1_right: int,
+    depth_array2_top: int,
+    depth_array2_bottom: int,
+    depth_array2_left: int,
+    depth_array2_right: int,
+    depth_array3_top: int,
+    depth_array3_bottom: int,
+    depth_array3_left: int,
+    depth_array3_right: int,
+    depth_array4_top: int,
+    depth_array4_bottom: int,
+    depth_array4_left: int,
+    depth_array4_right: int,
 ):
     """Crops four depth arrays according to a shared sensor configuration.
 
@@ -529,82 +560,82 @@ def crop_depth_arrays_consistent(
     depth_array1, depth_array2, depth_array3, depth_array4 = (
         crop_depth_array_consistent(
             depth_array1,
-            SENSOR_CONFIGURATION.SENSOR1_TOP,
-            SENSOR_CONFIGURATION.SENSOR1_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR1_LEFT,
-            SENSOR_CONFIGURATION.SENSOR1_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR2_TOP,
-            SENSOR_CONFIGURATION.SENSOR2_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR2_LEFT,
-            SENSOR_CONFIGURATION.SENSOR2_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR3_TOP,
-            SENSOR_CONFIGURATION.SENSOR3_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR3_LEFT,
-            SENSOR_CONFIGURATION.SENSOR3_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR4_TOP,
-            SENSOR_CONFIGURATION.SENSOR4_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR4_LEFT,
-            SENSOR_CONFIGURATION.SENSOR4_RIGHT,
+            depth_array1_top,
+            depth_array1_bottom,
+            depth_array1_left,
+            depth_array1_right,
+            depth_array2_top,
+            depth_array2_bottom,
+            depth_array2_left,
+            depth_array2_right,
+            depth_array3_top,
+            depth_array3_bottom,
+            depth_array3_left,
+            depth_array3_right,
+            depth_array4_top,
+            depth_array4_bottom,
+            depth_array4_left,
+            depth_array4_right,
             0,
         ),
         crop_depth_array_consistent(
             depth_array2,
-            SENSOR_CONFIGURATION.SENSOR1_TOP,
-            SENSOR_CONFIGURATION.SENSOR1_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR1_LEFT,
-            SENSOR_CONFIGURATION.SENSOR1_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR2_TOP,
-            SENSOR_CONFIGURATION.SENSOR2_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR2_LEFT,
-            SENSOR_CONFIGURATION.SENSOR2_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR3_TOP,
-            SENSOR_CONFIGURATION.SENSOR3_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR3_LEFT,
-            SENSOR_CONFIGURATION.SENSOR3_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR4_TOP,
-            SENSOR_CONFIGURATION.SENSOR4_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR4_LEFT,
-            SENSOR_CONFIGURATION.SENSOR4_RIGHT,
+            depth_array1_top,
+            depth_array1_bottom,
+            depth_array1_left,
+            depth_array1_right,
+            depth_array2_top,
+            depth_array2_bottom,
+            depth_array2_left,
+            depth_array2_right,
+            depth_array3_top,
+            depth_array3_bottom,
+            depth_array3_left,
+            depth_array3_right,
+            depth_array4_top,
+            depth_array4_bottom,
+            depth_array4_left,
+            depth_array4_right,
             1,
         ),
         crop_depth_array_consistent(
             depth_array3,
-            SENSOR_CONFIGURATION.SENSOR1_TOP,
-            SENSOR_CONFIGURATION.SENSOR1_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR1_LEFT,
-            SENSOR_CONFIGURATION.SENSOR1_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR2_TOP,
-            SENSOR_CONFIGURATION.SENSOR2_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR2_LEFT,
-            SENSOR_CONFIGURATION.SENSOR2_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR3_TOP,
-            SENSOR_CONFIGURATION.SENSOR3_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR3_LEFT,
-            SENSOR_CONFIGURATION.SENSOR3_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR4_TOP,
-            SENSOR_CONFIGURATION.SENSOR4_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR4_LEFT,
-            SENSOR_CONFIGURATION.SENSOR4_RIGHT,
+            depth_array1_top,
+            depth_array1_bottom,
+            depth_array1_left,
+            depth_array1_right,
+            depth_array2_top,
+            depth_array2_bottom,
+            depth_array2_left,
+            depth_array2_right,
+            depth_array3_top,
+            depth_array3_bottom,
+            depth_array3_left,
+            depth_array3_right,
+            depth_array4_top,
+            depth_array4_bottom,
+            depth_array4_left,
+            depth_array4_right,
             2,
         ),
         crop_depth_array_consistent(
             depth_array4,
-            SENSOR_CONFIGURATION.SENSOR1_TOP,
-            SENSOR_CONFIGURATION.SENSOR1_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR1_LEFT,
-            SENSOR_CONFIGURATION.SENSOR1_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR2_TOP,
-            SENSOR_CONFIGURATION.SENSOR2_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR2_LEFT,
-            SENSOR_CONFIGURATION.SENSOR2_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR3_TOP,
-            SENSOR_CONFIGURATION.SENSOR3_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR3_LEFT,
-            SENSOR_CONFIGURATION.SENSOR3_RIGHT,
-            SENSOR_CONFIGURATION.SENSOR4_TOP,
-            SENSOR_CONFIGURATION.SENSOR4_BOTTOM,
-            SENSOR_CONFIGURATION.SENSOR4_LEFT,
-            SENSOR_CONFIGURATION.SENSOR4_RIGHT,
+            depth_array1_top,
+            depth_array1_bottom,
+            depth_array1_left,
+            depth_array1_right,
+            depth_array2_top,
+            depth_array2_bottom,
+            depth_array2_left,
+            depth_array2_right,
+            depth_array3_top,
+            depth_array3_bottom,
+            depth_array3_left,
+            depth_array3_right,
+            depth_array4_top,
+            depth_array4_bottom,
+            depth_array4_left,
+            depth_array4_right,
             3,
         ),
     )
@@ -613,14 +644,14 @@ def crop_depth_arrays_consistent(
 
 
 def rotate_arrays(
-    depth_array1,
-    depth_array2,
-    depth_array3,
-    depth_array4,
-    angle_depth_array1,
-    angle_depth_array2,
-    angle_depth_array3,
-    angle_depth_array4,
+    depth_array1: np.ndarray,
+    depth_array2: np.ndarray,
+    depth_array3: np.ndarray,
+    depth_array4: np.ndarray,
+    angle_depth_array1: int,
+    angle_depth_array2: int,
+    angle_depth_array3: int,
+    angle_depth_array4: int,
 ):
     """Rotates each of four depth arrays by a specified angle.
 
@@ -659,7 +690,7 @@ def rotate_arrays(
     return depth_array1, depth_array2, depth_array3, depth_array4
 
 
-def map_invalid_to_midpoint(midpoint, depth_array):
+def map_invalid_to_midpoint(midpoint: int, depth_array: np.ndarray):
     """Replaces invalid (zero) values in a depth array with a specified midpoint value.
 
     This function ensures that all zero values in the input array are set to the given midpoint.
@@ -676,7 +707,7 @@ def map_invalid_to_midpoint(midpoint, depth_array):
     return depth_array
 
 
-def clip_values(depth_array, min_depth_value, max_depth_value):
+def clip_values(depth_array: np.ndarray, min_depth_value: int, max_depth_value: int):
     """Clips the values in a depth array to a specified minimum and maximum.
 
     This function limits all values in the input array to be within the given range.
@@ -692,7 +723,9 @@ def clip_values(depth_array, min_depth_value, max_depth_value):
     return np.clip(depth_array, min_depth_value, max_depth_value)
 
 
-def normalize_values_into_range(depth_array, min_depth_value, max_depth_value):
+def normalize_values_into_range(
+    depth_array: np.ndarray, min_depth_value: int, max_depth_value: int
+):
     """Normalizes the values in a depth array to a specified range.
 
     This function rescales the input array so its minimum and maximum values map to the given range, and returns the result as a uint16 array.
@@ -716,21 +749,21 @@ def normalize_values_into_range(depth_array, min_depth_value, max_depth_value):
     return depth_array.astype(np.uint16)
 
 
-def pad_to_shape(array, target_shape):
+def pad_to_shape(array: np.ndarray, target_shape: tuple[int, int]):
     padded = np.zeros(target_shape, dtype=array.dtype)
     padded[: array.shape[0], : array.shape[1]] = array
     return padded
 
 
-def unpad_to_shape(array, target_shape):
+def unpad_to_shape(array: np.ndarray, target_shape: tuple[int, int]):
     return array[: target_shape[0], : target_shape[1]]
 
 
 def process_from_transform_matrix(
-    depth_array1,
-    depth_array2,
-    depth_array3,
-    depth_array4,
+    depth_array1: np.ndarray,
+    depth_array2: np.ndarray,
+    depth_array3: np.ndarray,
+    depth_array4: np.ndarray,
 ):
     # Dynamically import or reload the modules
     matrix1 = importlib.import_module("transform_matrix_from_diff_depth_array1")
@@ -757,3 +790,19 @@ def process_from_transform_matrix(
     depth_array4 = unpad_to_shape(depth_array4, matrix4.shape)
 
     return depth_array1, depth_array2, depth_array3, depth_array4
+
+
+def export_transform_matrix_to_python(
+    matrix: np.ndarray, filename: str, original_shape: tuple[int, int] | None = None
+):
+    with open(filename, "w") as f:
+        f.write("import numpy as np\n\n")
+        if original_shape:
+            f.write(f"shape = {original_shape}\n\n")
+        f.write("transform_matrix = np.array([\n")
+        for row in matrix:
+            row_str = ", ".join(f"{val:5d}" for val in row)
+            f.write(f"    [{row_str}],\n")
+        f.write("], dtype=np.int16)\n")
+
+    print(f"Transformation matrix exported to: {filename}")

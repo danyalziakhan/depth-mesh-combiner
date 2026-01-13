@@ -1,0 +1,1 @@
+.venv\Scripts\python.exe view_result.py

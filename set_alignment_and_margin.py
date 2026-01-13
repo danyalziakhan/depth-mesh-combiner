@@ -24,6 +24,7 @@ from cv_ops import (
     rotate_arrays,
     get_combined_array,
     clip_values,
+    export_transform_matrix_to_python,
 )
 from sensor_configuration import SensorConfiguration
 
@@ -44,19 +45,6 @@ DEPTH_DATA_DIR = Path("./depth_data")
 PROCESS = psutil.Process(os.getpid())
 
 FRAME_NO = 1
-
-
-def export_transform_matrix_to_python(matrix, filename, original_shape):
-    with open(filename, "w") as f:
-        f.write("import numpy as np\n\n")
-        f.write(f"shape = {original_shape}\n\n")
-        f.write("transform_matrix = np.array([\n")
-        for row in matrix:
-            row_str = ", ".join(f"{val:5d}" for val in row)
-            f.write(f"    [{row_str}],\n")
-        f.write("], dtype=np.int16)\n")
-
-    print(f"Transformation matrix exported to: {filename}")
 
 
 def show_adjustment_sliders(
@@ -386,7 +374,22 @@ def apply_transformations_to_depth_arrays(
             depth_array2,
             depth_array3,
             depth_array4,
-            sensor_configuration,
+            sensor_configuration.SENSOR1_TOP,
+            sensor_configuration.SENSOR1_BOTTOM,
+            sensor_configuration.SENSOR1_LEFT,
+            sensor_configuration.SENSOR1_RIGHT,
+            sensor_configuration.SENSOR2_TOP,
+            sensor_configuration.SENSOR2_BOTTOM,
+            sensor_configuration.SENSOR2_LEFT,
+            sensor_configuration.SENSOR2_RIGHT,
+            sensor_configuration.SENSOR3_TOP,
+            sensor_configuration.SENSOR3_BOTTOM,
+            sensor_configuration.SENSOR3_LEFT,
+            sensor_configuration.SENSOR3_RIGHT,
+            sensor_configuration.SENSOR4_TOP,
+            sensor_configuration.SENSOR4_BOTTOM,
+            sensor_configuration.SENSOR4_LEFT,
+            sensor_configuration.SENSOR4_RIGHT,
         )
     )
 

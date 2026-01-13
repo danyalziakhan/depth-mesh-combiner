@@ -11,6 +11,7 @@ from cv_ops import (
     get_combined_array,
     map_invalid_to_midpoint,
     process_from_transform_matrix,
+    export_transform_matrix_to_python,
 )
 from sensor_configuration import SensorConfiguration
 
@@ -98,22 +99,11 @@ def on_key(event):
         export_transform_matrix_to_python(
             transform_matrix, "transform_matrix_combined_adjusted.py"
         )
-        print("✅ Exported: transform_matrix_combined_adjusted.py")
+        print("Exported: transform_matrix_combined_adjusted.py")
     else:
         print("Use '+', '-', '[', ']', or 's'.")
 
     update_display()
-
-
-def export_transform_matrix_to_python(matrix, filename):
-    with open(filename, "w") as f:
-        f.write("import numpy as np\n\n")
-        f.write("transform_matrix = np.array([\n")
-        for row in matrix:
-            row_str = ", ".join(f"{val:5d}" for val in row)
-            f.write(f"    [{row_str}],\n")
-        f.write("], dtype=np.int16)\n")
-    print(f"✅ Transformation matrix exported to: {filename}")
 
 
 if __name__ == "__main__":

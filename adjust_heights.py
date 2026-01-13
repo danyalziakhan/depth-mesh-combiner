@@ -1,4 +1,5 @@
 from __future__ import annotations
+from functools import partial
 import os
 from pathlib import Path
 
@@ -23,14 +24,13 @@ FRAME_HEIGHT = 424
 NEIGHBORHOOD_RADIUS = 3  # 1 = 3x3, 2 = 5x5, 0 = only center pixel
 PIXELS_TO_CHANGE = 30
 
-SENSOR_CONFIGURATION = SensorConfiguration()
-
+MOCK_DATA_SENSOR_COUNT = 4
 DEPTH_DATA_DIR = Path("./depth_data")
 
 FRAME_NO = 1
 
 
-def update_display():
+def update_display(combined, transform_matrix):
     modified = combined + transform_matrix
     im.set_data(modified)
     ax.set_title(
@@ -45,7 +45,7 @@ def get_pixel_block(center_y, center_x, radius):
     return [(y, x) for y in ys for x in xs]
 
 
-def on_click(event):
+def on_click(event, combined, transform_matrix):
     if event.inaxes != ax:
         return
     y, x = int(event.ydata), int(event.xdata)
@@ -58,7 +58,7 @@ def on_click(event):
         )
 
 
-def on_key(event):
+def on_key(event, combined, transform_matrix):
     global NEIGHBORHOOD_RADIUS
     y, x = selected_pixel
 
@@ -66,19 +66,19 @@ def on_key(event):
         if NEIGHBORHOOD_RADIUS > 0:
             NEIGHBORHOOD_RADIUS -= 1
             print(
-                f"⬅️ Radius decreased to {NEIGHBORHOOD_RADIUS} → {(2 * NEIGHBORHOOD_RADIUS + 1)}x{(2 * NEIGHBORHOOD_RADIUS + 1)}"
+                f"⬅Radius decreased to {NEIGHBORHOOD_RADIUS} → {(2 * NEIGHBORHOOD_RADIUS + 1)}x{(2 * NEIGHBORHOOD_RADIUS + 1)}"
             )
         else:
-            print("⚠️ Radius already at minimum (0)")
-        update_display()
+            print("Radius already at minimum (0)")
+        update_display(combined, transform_matrix)
         return
 
     elif event.key == "]":
         NEIGHBORHOOD_RADIUS += 1
         print(
-            f"➡️ Radius increased to {NEIGHBORHOOD_RADIUS} → {(2 * NEIGHBORHOOD_RADIUS + 1)}x{(2 * NEIGHBORHOOD_RADIUS + 1)}"
+            f"Radius increased to {NEIGHBORHOOD_RADIUS} → {(2 * NEIGHBORHOOD_RADIUS + 1)}x{(2 * NEIGHBORHOOD_RADIUS + 1)}"
         )
-        update_display()
+        update_display(combined, transform_matrix)
         return
 
     if y is None or x is None:
@@ -103,110 +103,54 @@ def on_key(event):
     else:
         print("Use '+', '-', '[', ']', or 's'.")
 
-    update_display()
+    update_display(combined, transform_matrix)
 
 
 if __name__ == "__main__":
-    try:
-        with open(
-            os.path.join(
-                DEPTH_DATA_DIR,
-                f"depth_array_int_{FRAME_NO}_array_1.txt",
-            ),
-            "r",
-        ) as f:
-            file_data = f.read()
-    except FileNotFoundError as e:
-        raise ValueError(
-            f"Depth data in {DEPTH_DATA_DIR} directory is not present. Run the program with actual sensors to generate depth data."
-        ) from e
+    sensor_configuration = SensorConfiguration()
 
-    file_data_list = ujson.loads(file_data)
-    depth_array1 = np.array(file_data_list)
+    depth_arrays = []
 
-    try:
-        with open(
-            os.path.join(
-                DEPTH_DATA_DIR,
-                f"depth_array_int_{FRAME_NO}_array_2.txt",
-            ),
-            "r",
-        ) as f:
-            file_data = f.read()
-    except FileNotFoundError as e:
-        raise ValueError(
-            f"Depth data in {DEPTH_DATA_DIR} directory is not present. Run the program with actual sensors to generate depth data."
-        ) from e
+    for i in range(1, MOCK_DATA_SENSOR_COUNT):
+        file_path = os.path.join(
+            DEPTH_DATA_DIR,
+            f"depth_array_int_{FRAME_NO}_array_{i}.txt",
+        )
 
-    file_data_list = ujson.loads(file_data)
-    depth_array2 = np.array(file_data_list)
+        try:
+            with open(file_path, "r") as f:
+                file_data = f.read()
+        except FileNotFoundError as e:
+            raise ValueError(
+                f"Depth data in {DEPTH_DATA_DIR} directory is not present. "
+                "Run the program with actual sensors to generate depth data."
+            ) from e
 
-    try:
-        with open(
-            os.path.join(
-                DEPTH_DATA_DIR,
-                f"depth_array_int_{FRAME_NO}_array_3.txt",
-            ),
-            "r",
-        ) as f:
-            file_data = f.read()
-    except FileNotFoundError as e:
-        raise ValueError(
-            f"Depth data in {DEPTH_DATA_DIR} directory is not present. Run the program with actual sensors to generate depth data."
-        ) from e
+        file_data_list = ujson.loads(file_data)
+        depth_arrays.append(np.array(file_data_list))
 
-    file_data_list = ujson.loads(file_data)
-    depth_array3 = np.array(file_data_list)
-
-    try:
-        with open(
-            os.path.join(
-                DEPTH_DATA_DIR,
-                f"depth_array_int_{FRAME_NO}_array_4.txt",
-            ),
-            "r",
-        ) as f:
-            file_data = f.read()
-    except FileNotFoundError as e:
-        raise ValueError(
-            f"Depth data in {DEPTH_DATA_DIR} directory is not present. Run the program with actual sensors to generate depth data."
-        ) from e
-
-    file_data_list = ujson.loads(file_data)
-    depth_array4 = np.array(file_data_list)
-
-    (
-        depth_array1,
-        depth_array2,
-        depth_array3,
-        depth_array4,
-    ) = process_from_transform_matrix(
-        depth_array1,
-        depth_array2,
-        depth_array3,
-        depth_array4,
+    (depth_arrays[0], depth_arrays[1], depth_arrays[2], depth_arrays[3]) = (
+        process_from_transform_matrix(
+            depth_arrays[0],
+            depth_arrays[1],
+            depth_arrays[2],
+            depth_arrays[3],
+        )
     )
 
-    combined = get_combined_array(
-        [
-            depth_array1,
-            depth_array2,
-            depth_array3,
-            depth_array4,
-        ]
-    )
+    combined = get_combined_array(depth_arrays)
 
-    combined = map_invalid_to_midpoint(SENSOR_CONFIGURATION.get_midpoint(), combined)
+    combined = map_invalid_to_midpoint(sensor_configuration.get_midpoint(), combined)
 
     combined = clip_values(
         combined,
-        SENSOR_CONFIGURATION.MIN_DEPTH_VALUE,
-        SENSOR_CONFIGURATION.MAX_DEPTH_VALUE,
+        sensor_configuration.MIN_DEPTH_VALUE,
+        sensor_configuration.MAX_DEPTH_VALUE,
     )
 
     combined = combined[
-        SENSOR_CONFIGURATION.TOP_MARGIN : -SENSOR_CONFIGURATION.BOTTOM_MARGIN,
-        SENSOR_CONFIGURATION.LEFT_MARGIN : -SENSOR_CONFIGURATION.RIGHT_MARGIN,
+        sensor_configuration.TOP_MARGIN : -sensor_configuration.BOTTOM_MARGIN,
+        sensor_configuration.LEFT_MARGIN : -sensor_configuration.RIGHT_MARGIN,
     ]
 
     fig, ax = plt.subplots(figsize=(16, 9))
@@ -230,8 +174,11 @@ if __name__ == "__main__":
 
     selected_pixel = [None, None]
 
+    on_click = partial(on_click, combined=combined, transform_matrix=transform_matrix)
+    on_key = partial(on_key, combined=combined, transform_matrix=transform_matrix)
+
     fig.canvas.mpl_connect("button_press_event", on_click)
     fig.canvas.mpl_connect("key_press_event", on_key)
 
-    update_display()
+    update_display(combined, transform_matrix)
     plt.show()

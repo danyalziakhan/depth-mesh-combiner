@@ -15,113 +15,55 @@ from cv_ops import (
 from sensor_configuration import SensorConfiguration
 
 
-SENSOR_CONFIGURATION = SensorConfiguration()
-
+MOCK_DATA_SENSOR_COUNT = 4
 DEPTH_DATA_DIR = Path("./depth_data")
 
 FRAME_NO = 1
 
 if __name__ == "__main__":
-    try:
-        with open(
-            os.path.join(
-                DEPTH_DATA_DIR,
-                f"depth_array_int_{FRAME_NO}_array_1.txt",
-            ),
-            "r",
-        ) as f:
-            file_data = f.read()
-    except FileNotFoundError as e:
-        raise ValueError(
-            f"Depth data in {DEPTH_DATA_DIR} directory is not present. Run the program with actual sensors to generate depth data."
-        ) from e
+    sensor_configuration = SensorConfiguration()
+    depth_arrays = []
 
-    file_data_list = ujson.loads(file_data)
-    depth_array1 = np.array(file_data_list)
+    for i in range(1, MOCK_DATA_SENSOR_COUNT + 1):
+        file_path = os.path.join(
+            DEPTH_DATA_DIR,
+            f"depth_array_int_{FRAME_NO}_array_{i}.txt",
+        )
 
-    try:
-        with open(
-            os.path.join(
-                DEPTH_DATA_DIR,
-                f"depth_array_int_{FRAME_NO}_array_2.txt",
-            ),
-            "r",
-        ) as f:
-            file_data = f.read()
-    except FileNotFoundError as e:
-        raise ValueError(
-            f"Depth data in {DEPTH_DATA_DIR} directory is not present. Run the program with actual sensors to generate depth data."
-        ) from e
+        try:
+            with open(file_path, "r") as f:
+                file_data = f.read()
+        except FileNotFoundError as e:
+            raise ValueError(
+                f"Depth data in {DEPTH_DATA_DIR} directory is not present. "
+                "Run the program with actual sensors to generate depth data."
+            ) from e
 
-    file_data_list = ujson.loads(file_data)
-    depth_array2 = np.array(file_data_list)
+        file_data_list = ujson.loads(file_data)
+        depth_arrays.append(np.array(file_data_list))
 
-    try:
-        with open(
-            os.path.join(
-                DEPTH_DATA_DIR,
-                f"depth_array_int_{FRAME_NO}_array_3.txt",
-            ),
-            "r",
-        ) as f:
-            file_data = f.read()
-    except FileNotFoundError as e:
-        raise ValueError(
-            f"Depth data in {DEPTH_DATA_DIR} directory is not present. Run the program with actual sensors to generate depth data."
-        ) from e
-
-    file_data_list = ujson.loads(file_data)
-    depth_array3 = np.array(file_data_list)
-
-    try:
-        with open(
-            os.path.join(
-                DEPTH_DATA_DIR,
-                f"depth_array_int_{FRAME_NO}_array_4.txt",
-            ),
-            "r",
-        ) as f:
-            file_data = f.read()
-    except FileNotFoundError as e:
-        raise ValueError(
-            f"Depth data in {DEPTH_DATA_DIR} directory is not present. Run the program with actual sensors to generate depth data."
-        ) from e
-
-    file_data_list = ujson.loads(file_data)
-    depth_array4 = np.array(file_data_list)
-
-    (
-        depth_array1,
-        depth_array2,
-        depth_array3,
-        depth_array4,
-    ) = process_from_transform_matrix(
-        depth_array1,
-        depth_array2,
-        depth_array3,
-        depth_array4,
+    (depth_arrays[0], depth_arrays[1], depth_arrays[2], depth_arrays[3]) = (
+        process_from_transform_matrix(
+            depth_arrays[0],
+            depth_arrays[1],
+            depth_arrays[2],
+            depth_arrays[3],
+        )
     )
 
-    combined = get_combined_array(
-        [
-            depth_array1,
-            depth_array2,
-            depth_array3,
-            depth_array4,
-        ]
-    )
+    combined = get_combined_array(depth_arrays)
 
-    combined = map_invalid_to_midpoint(SENSOR_CONFIGURATION.get_midpoint(), combined)
+    combined = map_invalid_to_midpoint(sensor_configuration.get_midpoint(), combined)
 
     combined = clip_values(
         combined,
-        SENSOR_CONFIGURATION.MIN_DEPTH_VALUE,
-        SENSOR_CONFIGURATION.MAX_DEPTH_VALUE,
+        sensor_configuration.MIN_DEPTH_VALUE,
+        sensor_configuration.MAX_DEPTH_VALUE,
     )
 
     combined = combined[
-        SENSOR_CONFIGURATION.TOP_MARGIN : -SENSOR_CONFIGURATION.BOTTOM_MARGIN,
-        SENSOR_CONFIGURATION.LEFT_MARGIN : -SENSOR_CONFIGURATION.RIGHT_MARGIN,
+        sensor_configuration.TOP_MARGIN : -sensor_configuration.BOTTOM_MARGIN,
+        sensor_configuration.LEFT_MARGIN : -sensor_configuration.RIGHT_MARGIN,
     ]
 
     from transform_matrix_combined_adjusted import transform_matrix

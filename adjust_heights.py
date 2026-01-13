@@ -111,7 +111,7 @@ if __name__ == "__main__":
 
     depth_arrays = []
 
-    for i in range(1, MOCK_DATA_SENSOR_COUNT):
+    for i in range(1, MOCK_DATA_SENSOR_COUNT + 1):
         file_path = os.path.join(
             DEPTH_DATA_DIR,
             f"depth_array_int_{FRAME_NO}_array_{i}.txt",
